@@ -7,7 +7,7 @@ import NotificationArea from './components/NotificationArea';
 import AdminPanel from './components/AdminPanel';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import './App.css'; // Basit stiller için
+import './App.css'; 
 
 function AppContent() {
   const { currentUser, logout, isAuthenticated } = useAuth();
