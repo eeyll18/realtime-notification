@@ -1,14 +1,27 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    try {
+      await login(username, password);
+      navigate("/");
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+          "Login failed. Please check your credentials."
+      );
+    }
   };
   return (
     <div className="max-w-md mx-auto mt-16 p-8 bg-gray-50 rounded-2xl shadow-2xl">
@@ -36,7 +49,7 @@ export default function Login() {
             Password
           </label>
           <input
-            type="text"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
