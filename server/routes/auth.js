@@ -1,61 +1,66 @@
-import express from "express";
+const express = require('express');
 const router = express.Router();
-// import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import User from "../models/User.js";
-import {protect} from "../middlewares/auth.js";
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const { protect } = require('../middlewares/auth');
 
-router.post("/register", async (req, res) => {
+// @route   POST /api/auth/register
+// @desc    Register a new user
+// @access  Public
+router.post('/register', async (req, res) => {
   const { username, password, role } = req.body;
   try {
     let user = await User.findOne({ username });
-    if (user) return res.status(400).json({ message: "User already exist." });
+    if (user) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
     user = new User({ username, password, role });
-    await user.save();  // pre-save şifreyi hashler
+    await user.save();
     const payload = { id: user.id, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-      expiresIn: "1h",
-    });
-    res.status(201).json({
-      token,
-      user: { id: user.id, username: user.username, role: user.role },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.status(201).json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 });
 
-router.post("/login", async (req, res) => {
+// @route   POST /api/auth/login
+// @desc    Authenticate user & get token
+// @access  Public
+router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
     const user = await User.findOne({ username });
-    if (!user) return res.status(400).json({ message: "Invalid credentials" });
-    const isMatched = await user.matchPassword(password);
-    if (!isMatched)
-      return res.status(400).json({ message: "Invalid credentials" });
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
     const payload = { id: user.id, role: user.role };
-    const token = jwt.sign(payload, process.env.JWT_SECRET_KEY, {
-      expiresIn: "1h",
-    });
-    res.json({
-      token,
-      user: { id: user.id, username: user.username, role: user.role },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server error");
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+    res.json({ token, user: { id: user.id, username: user.username, role: user.role } });
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
   }
 });
 
-router.get("/users", protect, async (req, res) => {
+// @route   GET /api/auth/users
+// @desc    Get all users (for admin to select target)
+// @access  Private/Admin
+router.get('/users', protect, async (req, res) => { // Basitlik adına admin kontrolü route'a eklenebilir veya client'ta
   try {
-    const users = await User.find().select("-password");
+    const users = await User.find().select('-password');
     res.json(users);
-  } catch (error) {
-    console.error(error);
-    res.status(500).send("Server Error");
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
   }
 });
 
-export default router;
+
+module.exports = router;
