@@ -1,13 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { protect } = require('../middlewares/auth');
 
-// @route   POST /api/auth/register
-// @desc    Register a new user
-// @access  Public
+
 router.post('/register', async (req, res) => {
   const { username, password, role } = req.body;
   try {
@@ -26,9 +23,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// @route   POST /api/auth/login
-// @desc    Authenticate user & get token
-// @access  Public
+
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
@@ -49,10 +44,7 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// @route   GET /api/auth/users
-// @desc    Get all users (for admin to select target)
-// @access  Private/Admin
-router.get('/users', protect, async (req, res) => { // Basitlik adına admin kontrolü route'a eklenebilir veya client'ta
+router.get('/users', protect, async (req, res) => { 
   try {
     const users = await User.find().select('-password');
     res.json(users);
