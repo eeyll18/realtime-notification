@@ -62,7 +62,7 @@ export default function Login() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-slate-300  placeholder-slate-500  text-slate-700  bg-white  rounded-t-md   sm:text-sm transition-colors"
+                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-5 border border-slate-300  placeholder-slate-500  text-slate-700  bg-white  rounded-t-md   sm:text-sm transition-colors"
                 placeholder="Kullanıcı Adınız"
                 disabled={isLoading}
               />
@@ -79,7 +79,7 @@ export default function Login() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-slate-300  placeholder-slate-500 da text-slate-900  bg-white  rounded-b-md  sm:text-sm transition-colors"
+                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-5 border border-slate-300  placeholder-slate-500 da text-slate-900  bg-white  rounded-b-md  sm:text-sm transition-colors"
                 placeholder="Şifreniz"
                 disabled={isLoading}
               />
