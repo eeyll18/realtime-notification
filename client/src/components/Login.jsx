@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
+
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -15,6 +17,7 @@ export default function Login() {
     setError("");
     try {
       await login(username, password);
+      toast.success(`Hoş geldiniz, ${username}!`);
       navigate("/");
     } catch (error) {
       setError(
@@ -24,45 +27,81 @@ export default function Login() {
     }
   };
   return (
-    <div className="max-w-md mx-auto mt-16 p-8 bg-gray-50 rounded-2xl shadow-2xl">
-      <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">
-        Login
-      </h2>
-      {error && (
-        <p className="mb-4 text-center text-red-600 font-semibold">{error}</p>
-      )}
-      <form className="space-y-6" onSubmit={handleSubmit}>
-        <div>
-          <label className="block mb-2 font-medium text-gray-700">
-            Username
-          </label>
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            placeholder="Username"
-            className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
-          />
+    <div className="flex flex-col items-center -mt-20 justify-center min-h-screen px-4 py-8 ">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-xl shadow-2xl  bg-gradient-to-br from-slate-100 to-sky-100">
+        <div className="text-center">
+          <h2 className="mt-2 text-3xl font-extrabold text-slate-700 ">
+            Hesabınıza Giriş Yapın
+          </h2>
+          <p className="mt-2 text-sm text-slate-600 ">
+            veya{" "}
+            <Link
+              to="/register"
+              className="font-medium text-sky-600 hover:text-sky-500"
+            >
+              yeni bir hesap oluşturun
+            </Link>
+          </p>
         </div>
-        <div>
-          <label className="block mb-2 font-medium text-gray-700">
-            Password
-          </label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
-          />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-        >
-          Login
-        </button>
-      </form>
+
+        {error && (
+          <p className="mb-4 text-center text-red-600 font-semibold">{error}</p>
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="rounded-md shadow-sm space-y-2">
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-slate-700 mb-1">
+                Kullanıcı Adı
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                autoComplete="username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-slate-300  placeholder-slate-500  text-slate-700  bg-white  rounded-t-md   sm:text-sm transition-colors"
+                placeholder="Kullanıcı Adınız"
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+                Şifre
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="appearance-none rounded-none relative block w-full px-3 py-3 pl-10 border border-slate-300  placeholder-slate-500 da text-slate-900  bg-white  rounded-b-md  sm:text-sm transition-colors"
+                placeholder="Şifreniz"
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className={`group relative w-full cursor-pointer flex justify-center items-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white 
+                         ${
+                           isLoading
+                             ? "bg-sky-400  cursor-not-allowed"
+                             : "bg-sky-600 hover:bg-sky-700 "
+                         } transition-colors`}
+            >
+              Giriş Yap
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

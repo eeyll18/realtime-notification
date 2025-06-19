@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { socket } from '../services/socket';
-import notificationService from '../services/notificationService';
-import { useAuth } from '../context/AuthContext';
-import { toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import React, { useState, useEffect } from "react";
+import { socket } from "../services/socket";
+import notificationService from "../services/notificationService";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function NotificationArea() {
   const [notifications, setNotifications] = useState([]);
@@ -12,58 +12,83 @@ function NotificationArea() {
   useEffect(() => {
     if (!token || !currentUser) return;
 
-    // Mevcut bildirimleri yükle
-    notificationService.getNotifications(token)
-      .then(response => {
+    // mevcut bildirimler
+    notificationService
+      .getNotifications(token)
+      .then((response) => {
         setNotifications(response.data);
       })
-      .catch(error => console.error("Error fetching notifications:", error));
+      .catch((error) => console.error("Error fetching notifications:", error));
 
-    // Yeni bildirimleri dinle
+    // yeni bildirimler
     const handleNewNotification = (notification) => {
-      console.log('New notification received via socket:', notification);
-      // Sadece bu kullanıcıya ait veya herkese açık bildirimleri göster/ekle
-      if (notification.userId === null || notification.userId === currentUser.id) {
-        setNotifications(prev => [notification, ...prev]);
-        toast.info(`Yeni Bildirim: ${notification.message} (${new Date(notification.createdAt).toLocaleTimeString()})`);
+      console.log("New notification received via socket:", notification);
+      if (
+        notification.userId === null ||
+        notification.userId === currentUser.id
+      ) {
+        setNotifications((prev) => [notification, ...prev]);
+        toast.info(
+          <div className="flex items-start">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-5 h-5 mr-2 text-blue-500"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
+                clipRule="evenodd"
+              />
+            </svg>
+            <div>
+              <strong>Yeni Bildirim:</strong> {notification.message}
+              <span className="block text-xs text-gray-500 mt-1">
+                {new Date(notification.createdAt).toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        );
       }
     };
 
     const handleError = (errorMsg) => {
-        toast.error(`Hata: ${errorMsg.message}`);
+      toast.error(`Hata: ${errorMsg.message}`);
     };
 
-    socket.on('new_notification', handleNewNotification);
-    socket.on('error_message', handleError); // Backend'den gelen hatalar için
+    socket.on("new_notification", handleNewNotification);
+    socket.on("error_message", handleError);
 
-    // Socket bağlantı durumunu kontrol et
     if (socket.disconnected) {
-        console.log("Socket is disconnected, attempting to connect...");
-        socket.connect();
+      console.log("Socket is disconnected, attempting to connect...");
+      socket.connect();
     }
 
-    socket.on('connect', () => {
-        console.log('Socket connected for notifications:', socket.id);
-    });
-    socket.on('connect_error', (err) => {
-        console.error('Socket connection error:', err.message);
-        // toast.error(`Socket bağlantı hatası: ${err.message}. Sayfayı yenileyin veya tekrar giriş yapın.`);
+    socket.on("connect", () => {
+      console.log("Socket connected for notifications:", socket.id);
     });
 
+    socket.on("connect_error", (err) => {
+      console.error("Socket connection error:", err.message);
+      toast.error(
+        `Socket bağlantı hatası: ${err.message}. Sayfayı yenileyin veya tekrar giriş yapın.`
+      );
+    });
 
     return () => {
-      socket.off('new_notification', handleNewNotification);
-      socket.off('error_message', handleError);
-      socket.off('connect');
-      socket.off('connect_error');
+      socket.off("new_notification", handleNewNotification);
+      socket.off("error_message", handleError);
+      socket.off("connect");
+      socket.off("connect_error");
     };
   }, [token, currentUser]);
 
   const handleMarkAsRead = async (id) => {
     try {
       await notificationService.markAsRead(id, token);
-      setNotifications(prev =>
-        prev.map(n => (n._id === id ? { ...n, read: true } : n))
+      setNotifications((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, read: true } : n))
       );
       toast.success("Bildirim okundu olarak işaretlendi.");
     } catch (error) {
@@ -73,30 +98,88 @@ function NotificationArea() {
   };
 
   if (!currentUser) {
-    return <p>Bildirimleri görmek için lütfen giriş yapın.</p>;
+    return (
+      <div className="bg-white dark:bg-slate-800 shadow-lg rounded-lg p-6 text-center my-4">
+        <p className="text-slate-600 dark:text-slate-300">
+          Bildirimleri görmek için lütfen giriş yapın.
+        </p>
+      </div>
+    );
   }
 
   return (
-    <div className="notification-area">
-      <h3>Bildirimler</h3>
-      {notifications.length === 0 && <p>Yeni bildirim yok.</p>}
-      <ul>
-        {notifications.map(notif => (
-          <li key={notif._id} style={{ color: notif.read ? 'grey' : 'black', marginBottom: '10px', padding: '10px', border: '1px solid #ccc' }}>
-            <p>{notif.message}</p>
-            <small>Alınma Zamanı: {new Date(notif.createdAt).toLocaleString()}</small>
-            <br />
-            <small>Kime: {notif.userId ? `Kullanıcı ID: ${notif.userId}` : 'Herkese'}</small>
-            {!notif.read && (
-               // Sadece kendi bildirimi veya herkese açık bir bildirim ise okundu yap butonu
-               (notif.userId === currentUser.id || notif.userId === null) &&
-              <button onClick={() => handleMarkAsRead(notif._id)} style={{ marginLeft: '10px', fontSize: '0.8em' }}>
-                Okundu İşaretle
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+    <div className="bg-white  shadow-xl rounded-lg p-4 sm:p-6 my-4 w-full max-w-2xl mx-auto">
+      <h3 className="text-xl sm:text-2xl font-semibold text-slate-800  mb-6 border-b pb-3 border-slate-200">
+        Bildirimleriniz
+      </h3>
+      {notifications.length === 0 ? (
+        <p className="text-slate-500  py-4 text-center">
+          Gösterilecek yeni bildiriminiz bulunmuyor.
+        </p>
+      ) : (
+        <ul className="space-y-4">
+          {notifications.map((notif) => (
+            <li
+              key={notif._id}
+              className={`
+                p-4 rounded-lg shadow-md border 
+                transition-all duration-300 ease-in-out
+                flex flex-col sm:flex-row sm:justify-between sm:items-start 
+                space-y-3 sm:space-y-0 sm:space-x-4
+                ${
+                  notif.read
+                    ? "bg-slate-50  border-slate-200  opacity-70 hover:opacity-100"
+                    : "bg-sky-50  border-sky-300 hover:shadow-lg"
+                }
+              `}
+            >
+              <div className="flex-grow">
+                <p
+                  className={`font-medium mb-1.5 ${
+                    notif.read ? "text-slate-600 " : "text-slate-800 "
+                  }`}
+                >
+                  {notif.message}
+                </p>
+                <div
+                  className={`text-xs space-y-0.5 ${
+                    notif.read ? "text-slate-500 " : "text-slate-500 "
+                  }`}
+                >
+                  <span className="block">
+                    <span className="font-medium">Alınma:</span>{" "}
+                    {new Date(notif.createdAt).toLocaleString()}
+                  </span>
+                  <span className="block">
+                    <span className="font-medium">Kime:</span>{" "}
+                    {notif.userId && notif.userId !== currentUser.id
+                      ? `Kullanıcı ID: ${notif.userId}`
+                      : notif.userId === currentUser.id
+                      ? "Size Özel"
+                      : "Herkese"}
+                  </span>
+                </div>
+              </div>
+
+              {!notif.read &&
+                (notif.userId === currentUser.id || notif.userId === null) && (
+                  <button
+                    onClick={() => handleMarkAsRead(notif._id)}
+                    className="
+                    cursor-pointer self-start sm:self-center mt-2 sm:mt-0 px-3 py-1.5 
+                    text-xs font-semibold rounded-md shadow-sm
+                    bg-blue-600 hover:bg-blue-700 text-white 
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
+                    transition-colors whitespace-nowrap
+                  "
+                  >
+                    Okundu İşaretle
+                  </button>
+                )}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
