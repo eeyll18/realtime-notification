@@ -30,18 +30,6 @@ function NotificationArea() {
         setNotifications((prev) => [notification, ...prev]);
         toast.info(
           <div className="flex items-start">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="w-5 h-5 mr-2 text-blue-500"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z"
-                clipRule="evenodd"
-              />
-            </svg>
             <div>
               <strong>Yeni Bildirim:</strong> {notification.message}
               <span className="block text-xs text-gray-500 mt-1">
@@ -88,7 +76,16 @@ function NotificationArea() {
     try {
       await notificationService.markAsRead(id, token);
       setNotifications((prev) =>
-        prev.map((n) => (n._id === id ? { ...n, read: true } : n))
+        prev.map((n) => {
+          if (n._id === id) {
+            const updatedReadBy = Array.isArray(n.readBy) ? [...n.readBy] : [];
+            if (!updatedReadBy.includes(currentUser.id)) {
+              updatedReadBy.push(currentUser.id);
+            }
+            return { ...n, readBy: updatedReadBy };
+          }
+          return n;
+        })
       );
       toast.success("Bildirim okundu olarak işaretlendi.");
     } catch (error) {
@@ -118,66 +115,73 @@ function NotificationArea() {
         </p>
       ) : (
         <ul className="space-y-4">
-          {notifications.map((notif) => (
-            <li
-              key={notif._id}
-              className={`
+          {notifications.map((notif) => {
+            return (
+              <li
+                key={notif._id}
+                className={`
                 p-4 rounded-lg shadow-md border 
                 transition-all duration-300 ease-in-out
                 flex flex-col sm:flex-row sm:justify-between sm:items-start 
                 space-y-3 sm:space-y-0 sm:space-x-4
                 ${
-                  notif.read
+                  notif.readBy.includes(currentUser.id)
                     ? "bg-slate-50  border-slate-200  opacity-70 hover:opacity-100"
                     : "bg-sky-50  border-sky-300 hover:shadow-lg"
                 }
               `}
-            >
-              <div className="flex-grow">
-                <p
-                  className={`font-medium mb-1.5 ${
-                    notif.read ? "text-slate-600 " : "text-slate-800 "
-                  }`}
-                >
-                  {notif.message}
-                </p>
-                <div
-                  className={`text-xs space-y-0.5 ${
-                    notif.read ? "text-slate-500 " : "text-slate-500 "
-                  }`}
-                >
-                  <span className="block">
-                    <span className="font-medium">Alınma:</span>{" "}
-                    {new Date(notif.createdAt).toLocaleString()}
-                  </span>
-                  <span className="block">
-                    <span className="font-medium">Kime:</span>{" "}
-                    {notif.userId && notif.userId !== currentUser.id
-                      ? `Kullanıcı ID: ${notif.userId}`
-                      : notif.userId === currentUser.id
-                      ? "Size Özel"
-                      : "Herkese"}
-                  </span>
+              >
+                <div className="flex-grow">
+                  <p
+                    className={`font-medium mb-1.5 ${
+                      notif.readBy.includes(currentUser.id)
+                        ? "text-slate-600 "
+                        : "text-slate-800 "
+                    }`}
+                  >
+                    {notif.message}
+                  </p>
+                  <div
+                    className={`text-xs space-y-0.5 ${
+                      notif.readBy.includes(currentUser.id)
+                        ? "text-slate-500 "
+                        : "text-slate-500 "
+                    }`}
+                  >
+                    <span className="block">
+                      <span className="font-medium">Alınma:</span>{" "}
+                      {new Date(notif.createdAt).toLocaleString()}
+                    </span>
+                    <span className="block">
+                      <span className="font-medium">Kime:</span>{" "}
+                      {notif.userId && notif.userId !== currentUser.id
+                        ? `Kullanıcı ID: ${notif.userId}`
+                        : notif.userId === currentUser.id
+                        ? "Size Özel"
+                        : "Herkese"}
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {!notif.read &&
-                (notif.userId === currentUser.id || notif.userId === null) && (
-                  <button
-                    onClick={() => handleMarkAsRead(notif._id)}
-                    className="
+                {!notif.readBy.includes(currentUser.id) &&
+                  (notif.userId === currentUser.id ||
+                    notif.userId === null) && (
+                    <button
+                      onClick={() => handleMarkAsRead(notif._id)}
+                      className="
                     cursor-pointer self-start sm:self-center mt-2 sm:mt-0 px-3 py-1.5 
                     text-xs font-semibold rounded-md shadow-sm
                     bg-blue-600 hover:bg-blue-700 text-white 
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 
                     transition-colors whitespace-nowrap
                   "
-                  >
-                    Okundu İşaretle
-                  </button>
-                )}
-            </li>
-          ))}
+                    >
+                      Okundu İşaretle
+                    </button>
+                  )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>
